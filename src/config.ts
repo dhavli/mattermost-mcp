@@ -23,47 +23,213 @@ export interface Config {
   monitoring?: MonitoringConfig;
 }
 
-export function loadConfig(): Config {
-  try {
-    // First try to load from config.local.json
-    const localConfigPath = path.resolve(__dirname, '../config.local.json');
-    
-    // Check if local config exists
-    if (fs.existsSync(localConfigPath)) {
-      const configData = fs.readFileSync(localConfigPath, 'utf8');
-      const config = JSON.parse(configData) as Config;
-      
-      // Validate required fields
-      validateConfig(config);
-      return config;
+/**
+ * Parse CLI arguments into a key-value map
+ * Supports: --key=value and --key value formats
+ */
+function parseCliArgs(): Record<string, string> {
+  const args: Record<string, string> = {};
+  const argv = process.argv.slice(2);
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+
+    if (arg.startsWith('--')) {
+      // Handle --key=value format
+      if (arg.includes('=')) {
+        const [key, value] = arg.slice(2).split('=');
+        args[key] = value;
+      }
+      // Handle --key value format
+      else {
+        const key = arg.slice(2);
+        const nextArg = argv[i + 1];
+        if (nextArg && !nextArg.startsWith('--')) {
+          args[key] = nextArg;
+          i++; // Skip the value in next iteration
+        } else {
+          args[key] = 'true'; // Flag without value
+        }
+      }
     }
-    
-    // Fall back to config.json
-    const configPath = path.resolve(__dirname, '../config.json');
-    const configData = fs.readFileSync(configPath, 'utf8');
-    const config = JSON.parse(configData) as Config;
-    
-    // Validate required fields
-    validateConfig(config);
-    return config;
-  } catch (error) {
-    console.error('Error loading configuration:', error);
-    throw new Error('Failed to load configuration. Please ensure config.json or config.local.json exists and contains valid data.');
   }
+
+  return args;
 }
 
-// Helper function to validate config
+/**
+ * Display help message and exit
+ */
+export function showHelp(): void {
+  const help = `
+Mattermost MCP Server
+
+USAGE:
+  mattermost-mcp [OPTIONS]
+  npx @conarti/mattermost-mcp [OPTIONS]
+
+OPTIONS:
+  --url <url>          Mattermost API URL (e.g., https://mattermost.example.com/api/v4)
+  --token <token>      Mattermost personal access token
+  --team-id <id>       Mattermost team ID
+  --run-monitoring     Run topic monitoring immediately on startup
+  --exit-after-monitoring  Exit after running monitoring (use with --run-monitoring)
+  --help               Show this help message
+
+ENVIRONMENT VARIABLES:
+  MATTERMOST_URL       Mattermost API URL
+  MATTERMOST_TOKEN     Mattermost personal access token
+  MATTERMOST_TEAM_ID   Mattermost team ID
+
+CONFIGURATION FILES (checked in order):
+  1. config.local.json  (for local overrides, gitignored)
+  2. config.json        (default configuration)
+
+PRIORITY (highest to lowest):
+  CLI arguments > Environment variables > config.local.json > config.json
+
+EXAMPLES:
+  # Using CLI arguments
+  mattermost-mcp --url https://mm.example.com/api/v4 --token xoxp-xxx --team-id abc123
+
+  # Using environment variables
+  MATTERMOST_URL=https://mm.example.com/api/v4 MATTERMOST_TOKEN=xoxp-xxx MATTERMOST_TEAM_ID=abc123 mattermost-mcp
+
+  # Using config file (create config.local.json or config.json)
+  mattermost-mcp
+
+CLAUDE CODE INTEGRATION:
+  Add to your Claude Code MCP settings:
+
+  {
+    "mcpServers": {
+      "mattermost": {
+        "command": "npx",
+        "args": ["-y", "@conarti/mattermost-mcp"],
+        "env": {
+          "MATTERMOST_URL": "https://your-mattermost.com/api/v4",
+          "MATTERMOST_TOKEN": "your-token",
+          "MATTERMOST_TEAM_ID": "your-team-id"
+        }
+      }
+    }
+  }
+`;
+
+  console.log(help);
+  process.exit(0);
+}
+
+/**
+ * Load configuration from file
+ */
+function loadConfigFromFile(): Partial<Config> | null {
+  // First try to load from config.local.json
+  const localConfigPath = path.resolve(__dirname, '../config.local.json');
+
+  if (fs.existsSync(localConfigPath)) {
+    try {
+      const configData = fs.readFileSync(localConfigPath, 'utf8');
+      return JSON.parse(configData) as Config;
+    } catch (error) {
+      console.error('Error reading config.local.json:', error);
+    }
+  }
+
+  // Fall back to config.json
+  const configPath = path.resolve(__dirname, '../config.json');
+
+  if (fs.existsSync(configPath)) {
+    try {
+      const configData = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(configData) as Config;
+    } catch (error) {
+      console.error('Error reading config.json:', error);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Load configuration with priority: CLI args > ENV vars > config files
+ */
+export function loadConfig(): Config {
+  const cliArgs = parseCliArgs();
+
+  // Show help if requested
+  if (cliArgs['help'] === 'true') {
+    showHelp();
+  }
+
+  // Load base config from file (if exists)
+  const fileConfig = loadConfigFromFile() || {};
+
+  // Build config with priority: CLI > ENV > file
+  const config: Config = {
+    mattermostUrl:
+      cliArgs['url'] ||
+      process.env.MATTERMOST_URL ||
+      fileConfig.mattermostUrl ||
+      '',
+    token:
+      cliArgs['token'] ||
+      process.env.MATTERMOST_TOKEN ||
+      fileConfig.token ||
+      '',
+    teamId:
+      cliArgs['team-id'] ||
+      process.env.MATTERMOST_TEAM_ID ||
+      fileConfig.teamId ||
+      '',
+    monitoring: fileConfig.monitoring,
+  };
+
+  // Validate required fields
+  validateConfig(config);
+
+  // Log config source (for debugging)
+  const sources: string[] = [];
+  if (cliArgs['url'] || cliArgs['token'] || cliArgs['team-id']) {
+    sources.push('CLI arguments');
+  }
+  if (process.env.MATTERMOST_URL || process.env.MATTERMOST_TOKEN || process.env.MATTERMOST_TEAM_ID) {
+    sources.push('environment variables');
+  }
+  if (fileConfig.mattermostUrl || fileConfig.token || fileConfig.teamId) {
+    sources.push('config file');
+  }
+
+  if (sources.length > 0) {
+    console.error(`Configuration loaded from: ${sources.join(', ')}`);
+  }
+
+  return config;
+}
+
+/**
+ * Helper function to validate config
+ */
 function validateConfig(config: Config): void {
+  const missing: string[] = [];
+
   if (!config.mattermostUrl) {
-    throw new Error('Missing mattermostUrl in configuration');
+    missing.push('mattermostUrl (--url or MATTERMOST_URL)');
   }
   if (!config.token) {
-    throw new Error('Missing token in configuration');
+    missing.push('token (--token or MATTERMOST_TOKEN)');
   }
   if (!config.teamId) {
-    throw new Error('Missing teamId in configuration');
+    missing.push('teamId (--team-id or MATTERMOST_TEAM_ID)');
   }
-  
+
+  if (missing.length > 0) {
+    console.error('\nMissing required configuration:');
+    missing.forEach(m => console.error(`  - ${m}`));
+    console.error('\nRun with --help for usage information.\n');
+    process.exit(1);
+  }
+
   // Validate monitoring config if enabled
   if (config.monitoring?.enabled) {
     if (!config.monitoring.schedule) {
@@ -75,6 +241,5 @@ function validateConfig(config: Config): void {
     if (!config.monitoring.topics || config.monitoring.topics.length === 0) {
       throw new Error('No topics specified in monitoring configuration');
     }
-    // userId and notificationChannelId are now optional
   }
 }
