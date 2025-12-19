@@ -1,7 +1,12 @@
 {
-  "name": "mattermost-mcp",
+  "name": "@conarti/mattermost-mcp",
   "version": "1.0.0",
   "description": "Mattermost MCP Server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conarti/mattermost-mcp.git"
+  },
+  "author": "conarti",
   "main": "build/index.js",
   "type": "module",
   "bin": {
@@ -18,7 +23,6 @@
     "mcp",
     "model-context-protocol"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.7.0",

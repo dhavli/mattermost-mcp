@@ -163,14 +163,24 @@ export class MattermostClient {
     const url = new URL(`${this.baseUrl}/users`);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('per_page', limit.toString());
-    
+
     const response = await fetch(url.toString(), { headers: this.headers });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to get users: ${response.status} ${response.statusText}`);
     }
-    
-    return response.json() as Promise<UsersResponse>;
+
+    // The API returns an array of users directly
+    const usersArray = await response.json();
+
+    if (Array.isArray(usersArray)) {
+      return {
+        users: usersArray,
+        total_count: usersArray.length
+      };
+    }
+
+    return usersArray as UsersResponse;
   }
 
   async getUserProfile(userId: string): Promise<UserProfile> {
@@ -184,21 +194,37 @@ export class MattermostClient {
     return response.json() as Promise<UserProfile>;
   }
   
+  // Get current authenticated user
+  async getMe(): Promise<UserProfile> {
+    const url = `${this.baseUrl}/users/me`;
+    const response = await fetch(url, { headers: this.headers });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get current user: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json() as Promise<UserProfile>;
+  }
+
   // Direct message channel methods
-  async createDirectMessageChannel(userId: string): Promise<Channel> {
+  async createDirectMessageChannel(otherUserId: string): Promise<Channel> {
+    // First get current user ID
+    const me = await this.getMe();
+
     const url = `${this.baseUrl}/channels/direct`;
-    const body = [userId];
-    
+    const body = [me.id, otherUserId];
+
     const response = await fetch(url, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(body)
     });
-    
+
     if (!response.ok) {
-      throw new Error(`Failed to create direct message channel: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to create direct message channel: ${response.status} ${response.statusText} - ${errorText}`);
     }
-    
+
     return response.json() as Promise<Channel>;
   }
 }
