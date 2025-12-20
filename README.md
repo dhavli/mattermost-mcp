@@ -139,18 +139,40 @@ Or using a config file:
 
 | Tool | Description |
 |------|-------------|
-| `mattermost_list_channels` | List public channels in the workspace |
+| `mattermost_list_channels` | List channels in the workspace (public, private, and DMs) |
 | `mattermost_get_channel_history` | Get messages from a channel with filtering options |
+
+#### `mattermost_list_channels` Options
+
+- `limit` (default: 100): Maximum number of channels to return
+- `page` (default: 0): Page number for pagination
+- `include_private` (default: false): If true, returns all channels including private channels and direct messages (DMs)
 
 #### `mattermost_get_channel_history` Options
 
 - `channel_id` (required): The ID of the channel
-- `limit` (default: 30): Number of messages to retrieve
-- `page` (default: 0): Page number for pagination
-- `since_date`: ISO 8601 date to get messages after (e.g., "2025-01-15" or "2025-01-15T10:00:00Z")
+- `limit`: Number of messages to retrieve. **If not specified or 0, returns ALL messages**
+- `page` (default: 0): Page number for pagination (only used when limit > 0)
+- `since_date`: ISO 8601 date to get messages after (e.g., "2025-01-15")
+- `before_date`: ISO 8601 date to get messages before. Use with `since_date` for date ranges
 - `before_post_id`: Get messages before this post ID (cursor pagination)
 - `after_post_id`: Get messages after this post ID (cursor pagination)
-- `get_all` (default: false): Fetch all messages automatically (ignores limit/page)
+
+**Examples:**
+
+```javascript
+// Get ALL messages from a channel
+{ "channel_id": "abc123" }
+
+// Get last 50 messages
+{ "channel_id": "abc123", "limit": 50 }
+
+// Get all messages from December 18, 2025
+{ "channel_id": "abc123", "since_date": "2025-12-18", "before_date": "2025-12-19" }
+
+// Get messages from a specific date onwards
+{ "channel_id": "abc123", "since_date": "2025-12-15" }
+```
 
 ### Message Tools
 
