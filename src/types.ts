@@ -29,6 +29,7 @@ export interface GetChannelHistoryArgs {
   limit?: number;
   page?: number;
   since_date?: string;
+  before_date?: string;
   before_post_id?: string;
   after_post_id?: string;
 }

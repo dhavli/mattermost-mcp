@@ -52,6 +52,10 @@ export const getChannelHistoryTool: Tool = {
         type: "string",
         description: "Get messages after this date (ISO 8601 format, e.g., '2025-12-18' or '2025-12-18T10:00:00Z')",
       },
+      before_date: {
+        type: "string",
+        description: "Get messages before this date (ISO 8601 format). Use with since_date to get messages for a specific date range (e.g., since_date='2025-12-18', before_date='2025-12-19' for all messages on Dec 18).",
+      },
       before_post_id: {
         type: "string",
         description: "Get messages before this post ID",
@@ -147,6 +151,7 @@ export async function handleGetChannelHistory(
     limit,
     page = 0,
     since_date,
+    before_date,
     before_post_id,
     after_post_id,
   } = args;
@@ -163,6 +168,16 @@ export async function handleGetChannelHistory(
         throw new Error(`Invalid date format: ${since_date}. Use ISO 8601 format (e.g., '2025-12-18' or '2025-12-18T10:00:00Z')`);
       }
       sinceTimestamp = date.getTime();
+    }
+
+    // Parse before_date to timestamp if provided
+    let beforeTimestamp: number | undefined;
+    if (before_date) {
+      const date = new Date(before_date);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date format: ${before_date}. Use ISO 8601 format (e.g., '2025-12-19' or '2025-12-19T00:00:00Z')`);
+      }
+      beforeTimestamp = date.getTime();
     }
 
     let response;
@@ -182,18 +197,27 @@ export async function handleGetChannelHistory(
       });
     }
 
-    // Format the posts for better readability
-    const formattedPosts = response.order.map(postId => {
+    // Get posts with timestamps for filtering
+    let postsWithTs = response.order.map(postId => {
       const post = response.posts[postId];
       return {
         id: post.id,
         user_id: post.user_id,
         message: post.message,
         create_at: new Date(post.create_at).toISOString(),
+        create_at_ts: post.create_at,
         reply_count: post.reply_count,
         root_id: post.root_id || null,
       };
     });
+
+    // Filter by before_date if provided (client-side filtering since API doesn't support 'until')
+    if (beforeTimestamp) {
+      postsWithTs = postsWithTs.filter(post => post.create_at_ts < beforeTimestamp);
+    }
+
+    // Remove internal timestamp field from output
+    const formattedPosts = postsWithTs.map(({ create_at_ts, ...rest }) => rest);
 
     return {
       content: [
@@ -208,6 +232,7 @@ export async function handleGetChannelHistory(
             per_page: getAll ? null : limit,
             filters: {
               since_date: since_date || null,
+              before_date: before_date || null,
               before_post_id: before_post_id || null,
               after_post_id: after_post_id || null,
             },
