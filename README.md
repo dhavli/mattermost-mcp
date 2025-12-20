@@ -109,7 +109,7 @@ Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or 
   "mcpServers": {
     "mattermost": {
       "command": "npx",
-      "args": ["-y", "@conarti/mattermost-mcp"],
+      "args": ["-y", "@conarti/mattermost-mcp@latest"],
       "env": {
         "MATTERMOST_URL": "https://your-mattermost.com/api/v4",
         "MATTERMOST_TOKEN": "your-token",
