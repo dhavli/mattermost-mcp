@@ -66,7 +66,7 @@ Mattermost MCP Server
 
 USAGE:
   mattermost-mcp [OPTIONS]
-  npx @conarti/mattermost-mcp [OPTIONS]
+  npx @donach/mattermost-mcp [OPTIONS]
 
 OPTIONS:
   --url <url>          Mattermost API URL (e.g., https://mattermost.example.com/api/v4)
@@ -105,7 +105,7 @@ CLAUDE CODE INTEGRATION:
     "mcpServers": {
       "mattermost": {
         "command": "npx",
-        "args": ["-y", "@conarti/mattermost-mcp"],
+        "args": ["-y", "@donach/mattermost-mcp"],
         "env": {
           "MATTERMOST_URL": "https://your-mattermost.com/api/v4",
           "MATTERMOST_TOKEN": "your-token",

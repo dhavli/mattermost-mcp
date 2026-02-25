@@ -7,7 +7,7 @@ MCP Server for the Mattermost API, enabling Claude and other MCP clients to inte
 ### Using npx (recommended)
 
 ```bash
-npx @dhavli/mattermost-mcp --help
+npx @donach/mattermost-mcp --help
 ```
 
 ### Using environment variables
@@ -16,13 +16,13 @@ npx @dhavli/mattermost-mcp --help
 MATTERMOST_URL=https://your-mattermost.com/api/v4 \
 MATTERMOST_TOKEN=your-token \
 MATTERMOST_TEAM_ID=your-team-id \
-npx @dhavli/mattermost-mcp
+npx @donach/mattermost-mcp
 ```
 
 ### Using CLI arguments
 
 ```bash
-npx @dhavli/mattermost-mcp \
+npx @donach/mattermost-mcp \
   --url https://your-mattermost.com/api/v4 \
   --token your-token \
   --team-id your-team-id
@@ -33,13 +33,13 @@ npx @dhavli/mattermost-mcp \
 ### Option 1: npx (no installation needed)
 
 ```bash
-npx @dhavli/mattermost-mcp
+npx @donach/mattermost-mcp
 ```
 
 ### Option 2: Global installation
 
 ```bash
-npm install -g @dhavli/mattermost-mcp
+npm install -g @donach/mattermost-mcp
 mattermost-mcp --help
 ```
 
@@ -109,7 +109,7 @@ Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or 
   "mcpServers": {
     "mattermost": {
       "command": "npx",
-      "args": ["-y", "@dhavli/mattermost-mcp@latest"],
+      "args": ["-y", "@donach/mattermost-mcp@latest"],
       "env": {
         "MATTERMOST_URL": "https://your-mattermost.com/api/v4",
         "MATTERMOST_TOKEN": "your-token",

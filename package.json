@@ -1,12 +1,12 @@
 {
-  "name": "@conarti/mattermost-mcp",
+  "name": "@donach/mattermost-mcp",
   "version": "1.1.2",
   "description": "Mattermost MCP Server",
   "repository": {
     "type": "git",
-    "url": "https://github.com/conarti/mattermost-mcp.git"
+    "url": "https://github.com/dhavli/mattermost-mcp.git"
   },
-  "author": "conarti",
+  "author": "donach",
   "main": "build/index.js",
   "type": "module",
   "bin": {
