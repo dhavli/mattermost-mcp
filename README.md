@@ -7,7 +7,7 @@ MCP Server for the Mattermost API, enabling Claude and other MCP clients to inte
 ### Using npx (recommended)
 
 ```bash
-npx @conarti/mattermost-mcp --help
+npx @dhavli/mattermost-mcp --help
 ```
 
 ### Using environment variables
@@ -16,13 +16,13 @@ npx @conarti/mattermost-mcp --help
 MATTERMOST_URL=https://your-mattermost.com/api/v4 \
 MATTERMOST_TOKEN=your-token \
 MATTERMOST_TEAM_ID=your-team-id \
-npx @conarti/mattermost-mcp
+npx @dhavli/mattermost-mcp
 ```
 
 ### Using CLI arguments
 
 ```bash
-npx @conarti/mattermost-mcp \
+npx @dhavli/mattermost-mcp \
   --url https://your-mattermost.com/api/v4 \
   --token your-token \
   --team-id your-team-id
@@ -33,20 +33,20 @@ npx @conarti/mattermost-mcp \
 ### Option 1: npx (no installation needed)
 
 ```bash
-npx @conarti/mattermost-mcp
+npx @dhavli/mattermost-mcp
 ```
 
 ### Option 2: Global installation
 
 ```bash
-npm install -g @conarti/mattermost-mcp
+npm install -g @dhavli/mattermost-mcp
 mattermost-mcp --help
 ```
 
 ### Option 3: Clone and build
 
 ```bash
-git clone https://github.com/conarti/mattermost-mcp.git
+git clone https://github.com/dhavli/mattermost-mcp.git
 cd mattermost-mcp
 npm install
 npm run build
@@ -109,7 +109,7 @@ Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or 
   "mcpServers": {
     "mattermost": {
       "command": "npx",
-      "args": ["-y", "@conarti/mattermost-mcp@latest"],
+      "args": ["-y", "@dhavli/mattermost-mcp@latest"],
       "env": {
         "MATTERMOST_URL": "https://your-mattermost.com/api/v4",
         "MATTERMOST_TOKEN": "your-token",
